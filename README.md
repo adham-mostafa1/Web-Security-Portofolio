@@ -1,4 +1,4 @@
-# Web-Security-Portofolio
+# Web-Security-Portfolio
 
 Welcome to my Web Security portfolio. This repository documents my practical journey in vulnerability research and penetration testing. It serves as a structured reference for the write-ups and proof-of-concepts (PoCs) I develop while exploring various security labs and applications.
 
