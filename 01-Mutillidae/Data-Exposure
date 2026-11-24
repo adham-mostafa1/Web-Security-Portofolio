@@ -1,18 +1,101 @@
-# Exposed Sensitive Paths via `robots.txt` and Directory Brute-Forcing
+# Sensitive Information Exposure via `robots.txt` and Directory Enumeration
 
 ## Overview
-First of all, we can get the exposed data in this buggy web application easily. We can find hidden pages/indexes in `robots.txt`—the most interesting one is `/passwords/`[cite: 1]. If we add this path in the browser/search bar, we get the page that includes passwords of the users[cite: 1].
 
-Now let's assume that this web application was more secure and we could not find a `robots.txt` file there[cite: 1]. In that case, we can use tools that discover hidden paths/indexes by brute-forcing using a wordlist, such as `gobuster` with `/raft-medium-directories.txt`[cite: 1, 2]. After running this scan, we find the same hidden paths/files that were in `robots.txt`[cite: 1].
+During testing of the OWASP Mutillidae II application, I discovered that some potentially sensitive directories could be identified through the publicly accessible `robots.txt` file.
 
-## Proof of Concept
+One of the interesting paths was `/passwords/`. After accessing this directory, I found a page containing user credentials in the lab environment.
 
-### 1. Checking `robots.txt`
-- Inspect `robots.txt` to look for disallowed or hidden paths (such as `/passwords/`)[cite: 1].
-- Accessing `/passwords/` directly exposed user credentials in this lab environment[cite: 1].
+To understand how these paths could be discovered without relying on `robots.txt`, I also used Gobuster to perform directory enumeration with a wordlist. The scan revealed the same directory.
 
-### 2. Directory Brute-Forcing with `gobuster`
-Run `gobuster` using the `raft-medium-directories.txt` wordlist, excluding `403` and `404` status codes, and checking `.php` and `.rxr` extensions[cite: 1, 2]:
+This exercise helped me understand how exposed paths can be discovered during the reconnaissance phase of a web penetration test.
+
+## Target Information
+
+- **Application:** OWASP Mutillidae II
+- **Environment:** Local Lab
+- **Testing Type:** Web Application Security Testing
+- **Tools:** Browser, Gobuster
+- **Scope:** Authorized local testing environment
+
+## Methodology
+
+### 1. Inspecting `robots.txt`
+
+I started by checking the `/robots.txt` file to look for paths that the website administrators did not want search engines to index.
+
+During inspection, I found a path that caught my attention:
+
+```text
+/passwords/
+```
+
+### 2. Accessing the Discovered Directory
+
+I accessed the discovered path directly through the browser.
+
+The page exposed user credentials in the lab environment.
+
+This showed that sensitive information was accessible without proper access restrictions.
+
+### 3. Directory Enumeration Using Gobuster
+
+Next, I wanted to check whether the same paths could be discovered without using `robots.txt`.
+
+I used Gobuster with the `raft-medium-directories.txt` wordlist to discover additional directories and files.
+
+**Command:**
 
 ```bash
-gobuster dir -u <target-url> -w /webtest/raft-medium-directories.txt -b 403,404 -x .php,.rxr
+gobuster dir \
+-u http://TARGET/mutillidae/ \
+-w /path/to/raft-medium-directories.txt \
+-b 403,404 \
+-x php,rxr \
+-o gobuster-results.txt
+```
+
+**Command Explanation:**
+
+- `dir`: Performs directory and file enumeration.
+- `-u`: Specifies the target URL.
+- `-w`: Specifies the wordlist.
+- `-b`: Excludes the specified HTTP status codes.
+- `-x`: Checks additional file extensions.
+- `-o`: Saves the scan results to a file.
+
+The scan successfully identified the same directory that I previously found through `robots.txt`.
+
+## Impact
+
+Exposing sensitive directories and files can create security risks.
+
+Depending on the exposed content, an attacker might be able to:
+
+- Discover sensitive application resources.
+- Access user credentials or other confidential information.
+- Use exposed information to perform further attacks.
+
+The actual impact depends on the sensitivity of the exposed data and the access restrictions applied to the affected resources.
+
+**Note:** The existence of `robots.txt` is not a vulnerability by itself. The main security issue in this lab was the unauthorized exposure of sensitive information.
+
+## Remediation
+
+To reduce the risk of this issue:
+
+- Do not rely on `robots.txt` to protect sensitive directories.
+- Apply proper authentication and authorization checks to sensitive resources.
+- Avoid storing credentials or confidential files inside publicly accessible web directories.
+- Disable directory listing when it is not required.
+- Review publicly accessible files and directories regularly.
+
+## What I Learned
+
+Through this exercise, I learned:
+
+- How to inspect `robots.txt` during the reconnaissance phase.
+- How exposed paths can reveal potentially sensitive resources.
+- How to use Gobuster for directory enumeration.
+- How different discovery methods can lead to the same exposed resource.
+- Why sensitive resources must be protected by proper access controls.
