@@ -1,1 +1,18 @@
+# Exposed Sensitive Paths via `robots.txt` and Directory Brute-Forcing
 
+## Overview
+First of all, we can get the exposed data in this buggy web application easily. We can find hidden pages/indexes in `robots.txt`—the most interesting one is `/passwords/`[cite: 1]. If we add this path in the browser/search bar, we get the page that includes passwords of the users[cite: 1].
+
+Now let's assume that this web application was more secure and we could not find a `robots.txt` file there[cite: 1]. In that case, we can use tools that discover hidden paths/indexes by brute-forcing using a wordlist, such as `gobuster` with `/webtest/raft-medium-directories.txt`[cite: 1, 2]. After running this scan, we find the same hidden paths/files that were in `robots.txt`[cite: 1].
+
+## Proof of Concept
+
+### 1. Checking `robots.txt`
+- Inspect `robots.txt` to look for disallowed or hidden paths (such as `/passwords/`)[cite: 1].
+- Accessing `/passwords/` directly exposed user credentials in this lab environment[cite: 1].
+
+### 2. Directory Brute-Forcing with `gobuster`
+Run `gobuster` using the `raft-medium-directories.txt` wordlist, excluding `403` and `404` status codes, and checking `.php` and `.rxr` extensions[cite: 1, 2]:
+
+```bash
+gobuster dir -u <target-url> -w /webtest/raft-medium-directories.txt -b 403,404 -x .php,.rxr
